@@ -87,11 +87,13 @@ public class MyService extends AccessibilityService {
                     }else {showToast("未找到启动点"); return;}
                     while (state==1){
                        wd=getRootInActiveWindow();
+                       sleep(100);
                        delay_set("我认识",wd);
                        delay_set("下一个",wd);
                        delay_set("想起来了",wd);
                        delay_set("下一组",wd);
                        delay_set("完成",wd);
+
                     }
                 }
             }).start();
