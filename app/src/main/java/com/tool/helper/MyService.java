@@ -65,7 +65,7 @@ public class MyService extends AccessibilityService {
                 @Override
                 public void run() {
 
-                    sleep(1000);
+                    sleep(5000);
                     clickPoint(p);
 
                     while (true){
