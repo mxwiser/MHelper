@@ -25,9 +25,9 @@ import java.util.logging.LogRecord;
 public class MyService extends AccessibilityService {
 
 
-
+//AccessibilityService被系统接管，组件之间通信用广播。
     public static int state=0;
-   private String ToastString="";
+    private String ToastString="";
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
 
@@ -37,6 +37,22 @@ public class MyService extends AccessibilityService {
               act();
             }
             else if(state!=0){
+            }
+
+        }
+        if (event.getPackageName().equals("com.tool.helper")){
+            if (event.getEventType()==AccessibilityEvent.TYPE_VIEW_CLICKED){
+
+                if (event.getText().get(0).equals("Button")){
+                    state=0;
+                    showToast("置位");
+                }
+
+            }
+            if (event.getEventType()==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED){
+
+
+
             }
 
         }
@@ -51,38 +67,37 @@ public class MyService extends AccessibilityService {
     public void act(){
 
 
-        AccessibilityNodeInfo wd=getRootInActiveWindow();
-        AccessibilityNodeInfo node = findViewByText("开始学习",wd);
-        if (node==null)
-        node = findViewByText("继续学习",wd);
-
-        if (node!=null){
-           state=1;
-           Point p = getPointtByNode(node);
-           showToast("任务开始");
            new Thread(new Runnable() {
                 @SuppressLint("SuspiciousIndentation")
                 @Override
                 public void run() {
 
-                    sleep(5000);
-                    clickPoint(p);
+                    sleep(3000);
+                    AccessibilityNodeInfo wd=getRootInActiveWindow();
+                    AccessibilityNodeInfo node = findViewByText("开始学习",wd);
+                    if (node==null)
+                        node = findViewByText("继续学习",wd);
+                    if (node!=null) {
+                        state = 1;
+                        showToast("任务开始");
+                        Point p = getPointtByNode(node);
+                        clickPoint(p);
+                        sleep(100);
 
-                    while (true){
-                       AccessibilityNodeInfo wd=getRootInActiveWindow();
+                    }else {showToast("未找到启动点"); return;}
+                    while (state==1){
+                       wd=getRootInActiveWindow();
                        delay_set("我认识",wd);
                        delay_set("下一个",wd);
                        delay_set("想起来了",wd);
                        delay_set("下一组",wd);
                        delay_set("完成",wd);
-
                     }
                 }
             }).start();
 
-        }
-        else
-        showToast("未找到,任务结束");
+
+
 
     }
 
@@ -140,7 +155,7 @@ public class MyService extends AccessibilityService {
 
 
 
-    boolean loop=true;
+
 
     //此函数回调执行完，才能获取Window，不然获取Window的操作会打断click。
     public boolean clickPoint(Point point) {
@@ -158,7 +173,7 @@ public class MyService extends AccessibilityService {
             public void onCompleted(GestureDescription gestureDescription) {
                 super.onCompleted(gestureDescription);
                 //showToast("点击完成");
-                loop=false;
+
 
             }
 
@@ -166,11 +181,11 @@ public class MyService extends AccessibilityService {
             public void onCancelled(GestureDescription gestureDescription) {
                 super.onCancelled(gestureDescription);
                 //showToast("点击取消");
-                loop=false;
+
             }
         }, null);
 
-        while (loop);
+
         return true;
 
     }
