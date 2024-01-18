@@ -17,23 +17,27 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import java.util.List;
+import java.util.Random;
 import java.util.logging.LogRecord;
 
 public class MyService extends AccessibilityService {
 
+
+    public static int state=0;
    private String ToastString="";
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         if (event.getEventType()==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED){
 
-            if ( getRootInActiveWindow()!=null){
-                act(getRootInActiveWindow());
+            if ( getRootInActiveWindow()!=null&&state==0){
+                act();
 
             }
-
-           else {
-                Toast.makeText(this,"Source为空", Toast.LENGTH_SHORT).show();
-            }
+           else if(state!=0){
+               //showToast("state:"+state);
+            }else if (getRootInActiveWindow()==null){
+               //showToast("Source为空");
+           }
 
         }
 
@@ -41,43 +45,52 @@ public class MyService extends AccessibilityService {
 
 
 
+    // final_nodeInfo.performAction(AccessibilityNodeInfo.ACTION_CLICK);
 
-    public void act(AccessibilityNodeInfo nodeInfo){
-        List<AccessibilityNodeInfo> accessibilityNodes=nodeInfo.findAccessibilityNodeInfosByText("开始学习");
+    public void act(){
 
 
-
-        if (accessibilityNodes.size()>0){
-            AccessibilityNodeInfo final_nodeInfo=accessibilityNodes.get(0);
-           Point p = getPointtByNode(final_nodeInfo);
-           showToast("找到:"+p.x+","+p.y);
-
-            new Thread(new Runnable() {
+        AccessibilityNodeInfo node = findViewByText("发现");
+        if (node!=null){
+           state=1;
+           Point p = getPointtByNode(node);
+           showToast("任务开始");
+           new Thread(new Runnable() {
                 @SuppressLint("SuspiciousIndentation")
                 @Override
                 public void run() {
-                    try {
-                        Thread.sleep(3000);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
+
+                    sleep(1000);
                     clickPoint(p);
-                       // final_nodeInfo.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                    Random random=new Random();
+                    sleep(1000+ random.nextInt(1000));
 
                 }
             }).start();
 
         }
-
         else
+        showToast("未找到,任务结束");
 
-        showToast("未找到");
     }
 
 
+    public AccessibilityNodeInfo findViewByText(String str){
+        List<AccessibilityNodeInfo> accessibilityNodes= getRootInActiveWindow().findAccessibilityNodeInfosByText(str);
+        if (accessibilityNodes.size()>0){
+            return accessibilityNodes.get(0);
+        }
+        else {
+            return null;
+        }
+    }
 
-    public void order(){
-
+    public void sleep(int s){
+        try {
+            Thread.sleep(s);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
