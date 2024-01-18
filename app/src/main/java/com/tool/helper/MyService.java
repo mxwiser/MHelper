@@ -12,6 +12,8 @@ import android.os.Message;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.view.accessibility.AccessibilityWindowInfo;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -23,21 +25,22 @@ import java.util.logging.LogRecord;
 public class MyService extends AccessibilityService {
 
 
+
     public static int state=0;
    private String ToastString="";
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
+
         if (event.getEventType()==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED){
 
-            if ( getRootInActiveWindow()!=null&&state==0){
-                act();
-
+            if (state==0){
+              act();
+//                AccessibilityNodeInfo node = findViewByText("我认识");
+//                showToast(""+node.getClassName());
             }
            else if(state!=0){
                //showToast("state:"+state);
-            }else if (getRootInActiveWindow()==null){
-               //showToast("Source为空");
-           }
+            }
 
         }
 
@@ -47,10 +50,15 @@ public class MyService extends AccessibilityService {
 
     // final_nodeInfo.performAction(AccessibilityNodeInfo.ACTION_CLICK);
 
+    @SuppressLint("SuspiciousIndentation")
     public void act(){
 
 
-        AccessibilityNodeInfo node = findViewByText("发现");
+        AccessibilityNodeInfo wd=getRootInActiveWindow();
+        AccessibilityNodeInfo node = findViewByText("开始学习",wd);
+        if (node==null)
+        node = findViewByText("继续学习",wd);
+
         if (node!=null){
            state=1;
            Point p = getPointtByNode(node);
@@ -62,9 +70,16 @@ public class MyService extends AccessibilityService {
 
                     sleep(1000);
                     clickPoint(p);
-                    Random random=new Random();
-                    sleep(1000+ random.nextInt(1000));
 
+                    while (true){
+                       AccessibilityNodeInfo wd=getRootInActiveWindow();
+                       delay_set("我认识",wd);
+                       delay_set("下一个",wd);
+                       delay_set("想起来了",wd);
+                       delay_set("下一组",wd);
+                       delay_set("完成",wd);
+
+                    }
                 }
             }).start();
 
@@ -74,15 +89,33 @@ public class MyService extends AccessibilityService {
 
     }
 
+    public void delay_set(String str,AccessibilityNodeInfo MyaccessibilityNodeInfo){
 
-    public AccessibilityNodeInfo findViewByText(String str){
-        List<AccessibilityNodeInfo> accessibilityNodes= getRootInActiveWindow().findAccessibilityNodeInfosByText(str);
-        if (accessibilityNodes.size()>0){
-            return accessibilityNodes.get(0);
+        AccessibilityNodeInfo accessibilityNodeInfo=findViewByText(str,MyaccessibilityNodeInfo);
+        if (accessibilityNodeInfo!=null){
+            clickPoint(getPointtByNode(accessibilityNodeInfo));
+            sleep(100);
+            //showToast("找到了");
+        }else {
+
         }
-        else {
-            return null;
-        }
+
+    }
+
+
+
+    public AccessibilityNodeInfo findViewByText(String str,AccessibilityNodeInfo accessibilityNodeInfo) {
+
+
+
+       if(accessibilityNodeInfo!=null){
+
+           if (accessibilityNodeInfo.findAccessibilityNodeInfosByText(str).size()>0)
+           return accessibilityNodeInfo.findAccessibilityNodeInfosByText(str).get(0);
+       }
+
+        return null;
+
     }
 
     public void sleep(int s){
@@ -108,35 +141,49 @@ public class MyService extends AccessibilityService {
         }
     };
 
-    public void clickPoint(Point point) {
 
+
+    boolean loop=true;
+
+    //此函数回调执行完，才能获取Window，不然获取Window的操作会打断click。
+    public boolean clickPoint(Point point) {
+
+        if (point==null)
+            return false;
 
         GestureDescription.Builder builder = new GestureDescription.Builder();
         Path path = new Path();
         path.moveTo(point.x, point.y);
-        builder.addStroke(new GestureDescription.StrokeDescription(path, 100L, 200L));
+        builder.addStroke(new GestureDescription.StrokeDescription(path, 0, 50));
         GestureDescription gesture = builder.build();
         dispatchGesture(gesture, new AccessibilityService.GestureResultCallback() {
             @Override
             public void onCompleted(GestureDescription gestureDescription) {
                 super.onCompleted(gestureDescription);
                 //showToast("点击完成");
+                loop=false;
+
             }
 
             @Override
             public void onCancelled(GestureDescription gestureDescription) {
                 super.onCancelled(gestureDescription);
                 //showToast("点击取消");
+                loop=false;
             }
         }, null);
 
+        while (loop);
+        return true;
 
     }
 
     static Point getPointtByNode(AccessibilityNodeInfo node){
-        if (node == null){
-            return new Point(0, 0);
+
+        if (node==null){
+            return null;
         }
+
         Rect rect = new Rect();
         node.getBoundsInScreen(rect);
         Point point = new Point(rect.centerX(), rect.centerY());
