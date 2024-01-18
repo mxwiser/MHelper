@@ -35,11 +35,8 @@ public class MyService extends AccessibilityService {
 
             if (state==0){
               act();
-//                AccessibilityNodeInfo node = findViewByText("我认识");
-//                showToast(""+node.getClassName());
             }
-           else if(state!=0){
-               //showToast("state:"+state);
+            else if(state!=0){
             }
 
         }
